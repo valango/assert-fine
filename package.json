@@ -1,0 +1,48 @@
+{
+  "name": "assert-fine",
+  "version": "0.2.0",
+  "description": "A tiny utility making Node.js assert.ok() more handy, and available in front-end too",
+  "main": "index.js",
+  "homepage": "https://github.com/valango/assert-fine#readme",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/valango/assert-fine.git"
+  },
+  "author": "Villem Alango <villem.alango@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "assert",
+    "breakpoint",
+    "frontend",
+    "backend",
+    "front-end",
+    "back-end",
+    "browser",
+    "node.js",
+    "lazy",
+    "lightweight"
+  ],
+  "files": [
+    "index.js",
+    "browser.js",
+    "fallback.js"
+  ],
+  "scripts": {
+    "clean": "rimraf *.tmp *.l* reports yarn.lock",
+    "lint": "eslint .",
+    "purge": "rimraf *.tmp *.l* reports yarn.lock node_modules",
+    "test": "jest",
+    "test:coverage": "codecov"
+  },
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "codecov": "^3.7.2",
+    "coveralls": "^3.1.0",
+    "eslint": "^7.7.0",
+    "jest": "^26.4.2",
+    "rimraf": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=10.15.1"
+  }
+}
