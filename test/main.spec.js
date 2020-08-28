@@ -27,6 +27,7 @@ function LabRat (ok, idea) {
   this.ok = ok
 }
 
+//  Test object for instance methods.
 LabRat.prototype.compose = function (...args) {
   return ['Rat#' + this.idea + ':'].concat(args).join(' ')
 }
@@ -36,6 +37,7 @@ LabRat.prototype.poke = function (hard) {
   return true
 }
 
+//  Actual tests.
 const runTests = () => {
   let AssertionError, ok, modifyingHook, providedArgs, restOfArgs
 
@@ -122,6 +124,8 @@ const runTests = () => {
     expect(e.stack).toMatch(/assertion:/)
   })
 }
+
+//  Test suites.
 
 describe('front-end: assert npm package', () => {
   beforeAll(() => {
