@@ -1,7 +1,7 @@
 # assert-fine
 [![Build Status](https://travis-ci.org/valango/assert-fine.svg?branch=master)](https://travis-ci.org/valango/assert-fine)  [![Code coverage](https://codecov.io/gh/valango/assert-fine/branch/master/graph/badge.svg)](https://codecov.io/gh/valango/assert-fine)
 
-A tiny utility making Node.js assert.ok() more useful and available in front-end code, too.
+A tiny utility, that helps to find cause of seemingly random failures in your code.
 
 Probably the most popular part of Node.js native
 [`assert` API](https://nodejs.org/api/assert.html)
@@ -18,6 +18,11 @@ The lightweight **_assert-fine_** package makes it even more useful:
    or one provided by _module bundler_ gets used when available;
    otherwise a fallback for just `assert.ok()` and `AssertionError` is loaded.
    
+This package is _**super useful**, when assertions fail in seemingly random manner_ -
+in this case the call stack from assertion error may not tell us, which combination of state
+values actually led to the failure -
+but having debugger stopped at the breakpoint (see above), certainly will. 
+
 ## Install
 `  npm install -S assert-fine`<br />or<br />`  yarn add assert-fine`
   

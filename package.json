@@ -1,7 +1,7 @@
 {
   "name": "assert-fine",
   "version": "1.0.2",
-  "description": "A tiny utility making Node.js assert.ok() more handy, and available in front-end too",
+  "description": "Find cause of seemingly random failures in your code",
   "main": "index.js",
   "homepage": "https://github.com/valango/assert-fine#readme",
   "repository": {
@@ -12,15 +12,17 @@
   "license": "MIT",
   "keywords": [
     "assert",
-    "breakpoint",
-    "frontend",
-    "backend",
-    "front-end",
     "back-end",
+    "backend",
+    "breakpoint",
     "browser",
+    "front-end",
+    "frontend",
     "node.js",
     "lazy",
-    "lightweight"
+    "lightweight",
+    "random failures",
+    "state"
   ],
   "files": [
     "index.js",
