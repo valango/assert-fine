@@ -56,8 +56,9 @@ class TouchyOne {
 }
 ```
 
-Using a function in argument list can be good for avoiding diagnostics
-string computation, unless it will be actually used.
+Using a function argument here will postpone the formatting of diagnostic strings
+until we actually need them for reporting a failed assertion - so,
+your code won't slow down otherwise.
 
 ## API
 The package has named exports as follows:
