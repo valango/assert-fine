@@ -30,9 +30,9 @@
     "fallback.js"
   ],
   "scripts": {
-    "clean": "rimraf *.tmp *.l* reports yarn.lock",
+    "clean": "rimraf *.tmp *.l* reports",
     "lint": "eslint .",
-    "purge": "rimraf *.tmp *.l* reports yarn.lock node_modules",
+    "purge": "npm run clean && rimraf node_modules",
     "test": "jest",
     "test:coverage": "codecov"
   },
