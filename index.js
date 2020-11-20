@@ -1,18 +1,25 @@
 'use strict'
 
-let callback, assertOk
+let callback, loaded = {}
 
-if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true) {
-  assertOk = require('./browser.js')
+//  browserify and webpack define process.browser
+//  electron defines process.type
+//  {@link https://www.electronjs.org/docs/api/process}
+
+if (typeof (window) === 'object' || process.type === 'renderer') {
+  loaded = require('./browser.js')()
 } else {
-  assertOk = require('assert')
+  //  Normal Node.js environment.
+  loaded.assert = require('assert')
+  loaded.format = require('util').format
 }
 
-const AssertionError = assertOk.AssertionError
+let { assert, format } = loaded
+const AssertionError = assert.AssertionError
 
-if (assertOk.strict) assertOk = assertOk.strict
+if (assert.strict) assert = assert.strict
 
-if (assertOk.ok) assertOk = assertOk.ok
+if (assert.ok) assert = assert.ok
 
 /**
  * On failure condition calls callback first with `args` supplied, then composes
@@ -25,31 +32,34 @@ if (assertOk.ok) assertOk = assertOk.ok
  * @throws {Error}
  */
 const ok = (value, ...args) => {
-  if (!value) {
-    let i = 0, parts = args, texts = []
+  if (value) return value
 
-    try {
-      if (callback) {
-        parts = callback(args)
-        if (!Array.isArray(parts)) parts = args
-      }
+  let i = -1, parts = args, message
 
+  try {
+    if (callback) callback(args)
+
+    if ((parts = args).length) {
+      i = 0
       while (i < parts.length) {
-        const v = parts[i++]
+        let v = parts[i++]
         if (typeof v === 'function') {
-          texts.push(v(...parts.slice(i)) + '')
+          v = v(...parts.slice(i))
+          parts = parts.slice(0, i - 1).concat(v)
           break
-        } else {
-          texts.push(v + '')
         }
       }
-    } catch (error) {
-      assertOk(value, 'Failure in ' + (i ? 'argument #' + (i - 1) : 'callback') +
-        '\n  ' + error.stack + '\n  assertion:')
+      if (parts[0] && /(?<!%)%[cdfijoOs]/.test(parts[0])) {
+        message = format.apply(null, parts)
+      } else {
+        message = parts.join(' ')
+      }
     }
-    i ? assertOk(value, texts.join(' ')) : assertOk(value)
+  } catch (error) {
+    assert(value, 'Assertion ' + (i < 0 ? 'callback' : 'formatting') +
+      ' failed too!\n' + error.stack + '\n  assertion:')
   }
-  return value
+  assert(value, message)
 }
 
 /**

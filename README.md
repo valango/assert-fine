@@ -1,27 +1,26 @@
 # assert-fine
 [![Build Status](https://travis-ci.org/valango/assert-fine.svg?branch=master)](https://travis-ci.org/valango/assert-fine)  [![Code coverage](https://codecov.io/gh/valango/assert-fine/branch/master/graph/badge.svg)](https://codecov.io/gh/valango/assert-fine)
 
-A tiny utility, that helps to find cause of seemingly random failures in your code.
+A tiny utility for finding a cause of seemingly random failures in your code.
 
-Probably the most popular part of Node.js native
-[`assert` API](https://nodejs.org/api/assert.html)
-is `assert.strict.ok()`, or just `assert()`.
-The lightweight **_assert-fine_** package makes it even more useful:
-
-   1. You can define a _callback function_ to be called every time before the assertion error throws.
-   It may be an excellent place for a _**debugger breakpoint**_, and it also helps
-   to _improve application diagnostics_ features.
-   1. In some use cases, code needs to be executed before assertion failure - there
-   have been Node.js _feature request [#5312](https://github.com/nodejs/node/issues/5312)_ for this.
-   1. Basic assertion with features above will be available in _**front-end** code_, too.
-   The npm [`assert`](https://github.com/browserify/commonjs-assert) package
-   or one provided by _module bundler_ gets used when available;
-   otherwise a fallback for just `assert.ok()` and `AssertionError` is loaded.
+The lightweight **_assert-fine_** provides a substitute for Node.js
+native [`assert` API](https://nodejs.org/api/assert.html) package's
+_strict_ _`assert()`_ or _`ok()`_ , with added benefits:
+   1. _**lazy formatting**_ - informative messages without execution speed penalty;
+   1. optional _**callback**_ is executed _before_ the assertion will throw.
+   1. _**front-end support**_ - yes.
+   
+For a _**front-end app**_, the [`assert`](https://github.com/browserify/commonjs-assert)
+npm package or one provided by _module bundler_, is used when available;
+otherwise, a simple fallback for just `assert.ok()` and `AssertionError` is loaded.
    
 This package is _**super useful**, when assertions fail in seemingly random manner_ -
-in this case the call stack from assertion error may not tell us, which combination of state
-values actually led to the failure -
-but having debugger stopped at the breakpoint (see above), certainly will. 
+in this case the call stack from assertion error may not tell you, which combination of state
+values actually led to the failure condition -
+but having debugger stopped at the breakpoint (see above), certainly will.
+
+Running a special code (a callback) was actually a proposed but rejected Node.js
+feature request [#5312](https://github.com/nodejs/node/issues/5312)_.
 
 ## Install
 `  npm install -S assert-fine`<br />or<br />`  yarn add assert-fine`
@@ -29,36 +28,20 @@ but having debugger stopped at the breakpoint (see above), certainly will.
 ## Usage
 ```javascript
 const assert = require('assert-fine')
-const getValue1 = () => { /* compute and return something like 'V1' */ }
-const getValue2 = () => { /* compute and return something like 'V2' */ }
-let allIsWell = false     //  Test value in our examples.
+const getDetails = (...args) => ({ args, foo: 'bar' }) // Or whatever...
+let expectedValue = 'good', value, currentOperation
 
-assert.hook(() => {
-  //  A place for breakpoint.
-  appendToLogs('good-bye, cruel world!')
+assert.hook(() => {                         //  This call is optional.
+  appendToLogs('good-bye, cruel world!')    //  The breakpoint place.
 })
 
-//  --> 'Failed: V1 V2'
-assert(allIsWell, 'Failed:', getValue1(), getValue2())
+currentOpertion = 'expected'
 
-//  --> 'Failed: V1 V2'    ... but with lazy message composing.
-assert(allIsWell, 'Failed:', () => (getValue1() + ' ' + getValue2()))
+assert(value === expected, "%s('%s'): %o", 
+  currentOperation, expectedValue, getDetails, 7, 8)
 
-class TouchyOne {
-  collectInfo(...args) {
-    //  return string of detailed information
-  }
-
-  getTouched() {  
-    //  Combine instance method with others stuff in lazy fashion.
-    assert(allIsWell, 'Ouch!', this.collectInfo.bind(this), getValue1, getValue2)
-  }
-}
+//  --> "AssertionError: expected('good'): { args: [7, 8], foo: 'bar' }"
 ```
-
-Using a function argument here will postpone the formatting of diagnostic strings
-until we actually need them for reporting a failed assertion - so,
-your code won't slow down otherwise.
 
 ## API
 The package has named exports as follows:
@@ -66,11 +49,17 @@ The package has named exports as follows:
 **`ok`**`( value, ...args ) : {*}`
 
 Similar to Node.js native `assert.ok()`, except that:
-   * returns the `value` on success;
-   * on failure, calls hook callback before composing diagnostic message and throwing exception;
-   * it composes diagnostic message by joining `args` together. If one of those is a function,
-   it is called with the rest of the arguments and return value will be appended to earlier arguments.
-   
+   * if the _`value`_ is truey, it  returns the `value`;
+   * if the _`value`_ is falsy, it:
+      1. calls _hook callback_;
+      1. composes diagnostic message;
+      1. throws an _`AssertionError`_ with composed message.
+
+Composing the message:
+    1. if one of the optional arguments is a function, it will be
+    replaced with its returned value after applying the rest or arguments to it.
+    1. resulting arguments are applied to Node.js _`format()`_ function.
+
 This function is package's **_default export_** as well.
    
 **`hook`**`( [ callback ] ) : {function() | undefined}`
@@ -89,12 +78,12 @@ For use with `instanceof` operator. It has the same properties as it's Node.js c
 In front-end code, the message and stack values may be slightly different from what they
 might be in case of Node.js assert.
 
-When error occurs in hook callback, the `.message` and `.stack` property values
+When error occurs in hook callback or during formatting, the `.message` and `.stack` property values
 of `AssertionError` instance will indicate this. If this happens, the `.message` will be multi-line
 string similar to:
 
 ```
-Failure in callback
+Assertion callback failed too!
   Error: Intentional
     at apply (/Users/me/dev/_components/assert-fine/test/main.spec.js:15:11)
     at ok (/Users/me/dev/_components/assert-fine/index.js:37:24)
@@ -102,8 +91,6 @@ Failure in callback
     at processTicksAndRejections (internal/process/task_queues.js:97:5)
   assertion:
 ```
-
-If a function in args list fails, then the first line will be like `'Failure in argument #0'`.
 
 In both cases the `.stack` will have the original assertion stack dump available after
 the `'assertion:'` line.
