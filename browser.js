@@ -17,7 +17,7 @@ try {
 } catch (error) {}
 
 /* istanbul ignore next */
-format = format || ((...args) => console.assert(...args) && undefined)
+format = format || ((...args) => console.assert(false, ...args) && undefined)
 
 if (test) {
   exports = module.exports = () => {
