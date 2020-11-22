@@ -5,7 +5,7 @@ module.exports = {
   collectCoverageFrom: ['*.js', '!*.config.js', '!.*'],
   coverageDirectory: 'reports',
   coveragePathIgnorePatterns: ['reports', 'test'],
-  displayName: 'client',
+  // displayName: 'client',
   // coverageProvider: 'babel',
   rootDir: '..',
   verbose: true

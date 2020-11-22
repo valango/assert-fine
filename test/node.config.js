@@ -1,5 +1,5 @@
 module.exports = {
   ...require('./jest.config'),
-  displayName: 'server',
+  // displayName: 'server',
   testEnvironment: 'node'
 }

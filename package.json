@@ -33,7 +33,9 @@
     "clean": "rimraf *.tmp *.l* reports",
     "lint": "eslint .",
     "purge": "npm run clean && rimraf node_modules",
-    "test": "jest --config test/node.config.js",
+    "testb": "jest --config test/node.config.js back-end.spec",
+    "testf": "jest --config test/jest.config.js front-end.spec",
+    "test": "npm run testb && npm run testf",
     "test:coverage": "codecov"
   },
   "devDependencies": {

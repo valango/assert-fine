@@ -6,8 +6,8 @@ let callback, loaded = {}
 //  electron defines process.type
 //  {@link https://www.electronjs.org/docs/api/process}
 
-if ((typeof (window) === 'object' && window === this) || process.type === 'renderer') {
-  loaded = require('./browser.js')
+if (typeof (window) === 'object' || process.type === 'renderer') {
+  loaded = require('./browser.js')()
 } else {
   //  Normal Node.js environment.
   loaded.assert = require('assert')
@@ -49,7 +49,7 @@ const ok = (value, ...args) => {
           break
         }
       }
-      if (parts[0] && /(?<!%)%[cdfijoO]/.test(parts[0])) {
+      if (parts[0] && /(?<!%)%[cdfijoOs]/.test(parts[0])) {
         message = format.apply(null, parts)
       } else {
         message = parts.join(' ')
