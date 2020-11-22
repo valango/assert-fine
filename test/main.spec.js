@@ -92,11 +92,11 @@ const runTests = () => {
     expect(e.message).toBe('1 F(2,3)')
   })
 
-  test('failing w class method argument', () => {
+  /* test('failing w class method argument', () => {
     const rat = new LabRat(ok, 42)
     const e = getThrown(() => rat.poke(true))
     expect(e.message).toBe('poked Rat#42: 1 2')
-  })
+  }) */
 
   test('resetting hook', () => {
     providedArgs = restOfArgs = undefined
