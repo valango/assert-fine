@@ -1,3 +1,4 @@
+//  Load an 'assert' module or a local fallback when in browser environment.
 'use strict'
 /* eslint no-empty: 0 */
 
