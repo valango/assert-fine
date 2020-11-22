@@ -1,25 +1,22 @@
 # assert-fine
 [![Build Status](https://travis-ci.org/valango/assert-fine.svg?branch=master)](https://travis-ci.org/valango/assert-fine)  [![Code coverage](https://codecov.io/gh/valango/assert-fine/branch/master/graph/badge.svg)](https://codecov.io/gh/valango/assert-fine)
 
-A tiny utility, that helps to find cause of seemingly random failures in your code.
+A tiny utility for finding a cause of seemingly random failures in your code.
 
-Probably the most popular part of Node.js native
-[`assert` API](https://nodejs.org/api/assert.html)
-is `assert.strict.ok()`, or just `assert()`.
 The lightweight **_assert-fine_** provides a substitute for Node.js
 native [`assert` API](https://nodejs.org/api/assert.html) package's
 _strict_ _`assert()`_ or _`ok()`_ , with added benefits:
-   1. _**lazy formatting**_ - more informative messages without execution speed penalty;
+   1. _**lazy formatting**_ - informative messages without execution speed penalty;
    1. optional _**callback**_ is executed _before_ the assertion will throw.
-   1. _**front-end support** - yes.
+   1. _**front-end support**_ - yes.
    
 For a _**front-end app**_, the [`assert`](https://github.com/browserify/commonjs-assert)
 npm package or one provided by _module bundler_, is used when available;
 otherwise, a simple fallback for just `assert.ok()` and `AssertionError` is loaded.
    
 This package is _**super useful**, when assertions fail in seemingly random manner_ -
-in this case the call stack from assertion error may not tell us, which combination of state
-values actually led to the failure -
+in this case the call stack from assertion error may not tell you, which combination of state
+values actually led to the failure condition -
 but having debugger stopped at the breakpoint (see above), certainly will.
 
 Running a special code (a callback) was actually a proposed but rejected Node.js
@@ -31,21 +28,19 @@ feature request [#5312](https://github.com/nodejs/node/issues/5312)_.
 ## Usage
 ```javascript
 const assert = require('assert-fine')
-const getDetails = (...args) => ({ foo: 'bar' }) // Whatever we compute...
+const getDetails = (...args) => ({ args, foo: 'bar' }) // Or whatever...
 let expectedValue = 'good', value, currentOperation
 
-assert.hook(() => {                       //  This call is optional.
-  appendToLogs('good-bye, cruel world!')  //  The breakpoint place.
+assert.hook(() => {                         //  This call is optional.
+  appendToLogs('good-bye, cruel world!')    //  The breakpoint place.
 })
 
 currentOpertion = 'expected'
 
 assert(value === expected, "%s('%s'): %o", 
-  currentOperation, expectedValue, getDetails
-  //  If getDetails expects any aruments, put those after the function.
-)
+  currentOperation, expectedValue, getDetails, 7, 8)
 
-//  --> 'AssertionError: expected('good'): { foo: 'bar' }'
+//  --> "AssertionError: expected('good'): { args: [7, 8], foo: 'bar' }"
 ```
 
 ## API
@@ -88,7 +83,7 @@ of `AssertionError` instance will indicate this. If this happens, the `.message`
 string similar to:
 
 ```
-Failure in callback
+Assertion callback failed too!
   Error: Intentional
     at apply (/Users/me/dev/_components/assert-fine/test/main.spec.js:15:11)
     at ok (/Users/me/dev/_components/assert-fine/index.js:37:24)

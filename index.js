@@ -56,8 +56,8 @@ const ok = (value, ...args) => {
       }
     }
   } catch (error) {
-    assert(value, 'Failed assertion ' + (i < 0 ? 'callback' : 'formatting') +
-      '\n  ' + error.stack + '\n  assertion:')
+    assert(value, 'Assertion ' + (i < 0 ? 'callback' : 'formatting') +
+      ' failed too!\n' + error.stack + '\n  assertion:')
   }
   assert(value, message)
 }

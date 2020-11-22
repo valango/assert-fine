@@ -75,14 +75,14 @@ const runTests = () => {
 
   test('failing funcArg', () => {
     const e = getThrown(() => ok('', 1, fail, 2))
-    expect(e.message).toMatch(/assertion\sformatting/)
+    expect(e.message).toMatch(/assertion\sformatting/i)
     expect(e.stack).toMatch(/assertion:/)
   })
 
   test('failing callback', () => {
     ok.hook(fail)
     const e = getThrown(() => ok(undefined, 1, fail, 2))
-    expect(e.message).toMatch(/assertion\scallback/)
+    expect(e.message).toMatch(/assertion\scallback/i)
     expect(e.stack).toMatch(/assertion:/)
   }) /*  */
 }
