@@ -1,6 +1,10 @@
 'use strict'
 /* eslint-env jest */
 
+/**
+ ** @testEnvironment node
+ */
+
 const tests = require('./tests')
 // const browser = require('../browser')
 

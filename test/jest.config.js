@@ -4,5 +4,17 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ['*.js', '!.*'],
   coverageDirectory: 'reports',
+  projects: [
+    {
+      rootDir: '.',
+      testMatch: ['<rootDir>/test/back-*'],
+      testEnvironment: 'node'
+    },
+    {
+      rootDir: '.',
+      testMatch: ['<rootDir>/test/front-*']
+    }
+  ],
   rootDir: '..',
+  verbose: true
 }
