@@ -19,7 +19,7 @@ in this case the call stack from assertion error may not tell you, which combina
 values actually led to the failure condition -
 but having debugger stopped at the breakpoint (see above), certainly will.
 
-Running a special code (a callback) was actually a proposed but rejected Node.js
+Running a special code (a callback) was actually a proposed but rejected _Node.js
 feature request [#5312](https://github.com/nodejs/node/issues/5312)_.
 
 ## Install
@@ -42,7 +42,7 @@ assert(value === expected, "%s('%s'): %o",
 //  --> "AssertionError: expected('good'): { args: [7, 8], foo: 'bar' }"
 
 //  Some other place - type check has failed, so:
-assert.throw(TypeError, 'expected candy, but got %o instead', typeof someVar)
+assert.fail(TypeError, 'expected candy, but got %o instead', typeof someVar)
 ```
 
 ## API
@@ -72,7 +72,8 @@ but if _`error`_ argument:
      constructs a new instance and throws it.
    * is an _`Error`_ instance, then copies its _`message`_ property
    to _`originalMessage`_, sets new _`message`_ and throws the instance.
-   * is anything else, then throws _`AssertionError`_ complaining about it.
+   * is anything else, then throws an _`Error`_ instance with _`message`_
+   and _`originalMessage`_ composed of  _`args`_.
    
 The exceptions from here also invoke the _hook callback_, when set..
 
