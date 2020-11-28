@@ -39,29 +39,43 @@ currentOpertion = 'expected'
 
 assert(value === expected, "%s('%s'): %o", 
   currentOperation, expectedValue, getDetails, 7, 8)
-
 //  --> "AssertionError: expected('good'): { args: [7, 8], foo: 'bar' }"
+
+//  Some other place - type check has failed, so:
+assert.throw(TypeError, 'expected candy, but got %o instead', typeof someVar)
 ```
 
 ## API
-The package has named exports as follows:
- 
+The package has named exports **_`AssertionError`_**, **_`ok`_**, **_`fail`_** and **_`hook`_**.
+
 **`ok`**`( value, ...args ) : {*}`
 
 Similar to Node.js native `assert.ok()`, except that:
    * if the _`value`_ is truey, it  returns the `value`;
    * if the _`value`_ is falsy, it:
-      1. calls _hook callback_;
-      1. composes diagnostic message;
-      1. throws an _`AssertionError`_ with composed message.
+      * calls _hook callback_;
+      * composes diagnostic message;
+      * throws an _`AssertionError`_ with composed message.
 
 Composing the message:
-    1. if one of the optional arguments is a function, it will be
+   1. if one of the optional arguments is a function, it will be
     replaced with its returned value after applying the rest or arguments to it.
-    1. resulting arguments are applied to Node.js _`format()`_ function.
+   1. resulting arguments are applied to Node.js _`format()`_ function.
 
 This function is package's **_default export_** as well.
    
+**`fail`**`( error, ...args )
+
+Throws an error with message composed of _`args`_ in the same way the _`ok()`_ does,
+but if _`error`_ argument:
+   * is a constructor of _`Error`_ or any of its child classes, then
+     constructs a new instance and throws it.
+   * is an _`Error`_ instance, then copies its _`message`_ property
+   to _`originalMessage`_, sets new _`message`_ and throws the instance.
+   * is anything else, then throws _`AssertionError`_ complaining about it.
+   
+The exceptions from here also invoke the _hook callback_, when set..
+
 **`hook`**`( [ callback ] ) : {function() | undefined}`
 
 Sets new callback function if provided and returns the previous one. Falsy argument results

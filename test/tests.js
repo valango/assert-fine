@@ -65,6 +65,19 @@ const runTests = () => {
     expect(e.message).toBe('(%s,F(2,3))')
   })
 
+  test('throwing typed error', () => {
+    let e = getThrown(() => ok.fail(TypeError, '%o', 'T'))
+    expect(e).toBeInstanceOf(TypeError)
+    expect(e.message).toBe("'T'")
+    expect(getThrown(() => ok.fail(e, 'U'))).toBe(e)
+    expect(e.message).toBe('U')
+    expect(e.originalMessage).toBe("'T'")
+    expect(e = getThrown(() => (ok.fail({}, 'W')))).toBeInstanceOf(Error)
+    expect(e).not.toBeInstanceOf(AssertionError)
+    expect(e.message).toBe('assert.fail: bad argument')
+    expect(e.originalMessage).toBe('W')
+  })
+
   test('resetting hook', () => {
     providedArgs = restOfArgs = undefined
     expect(ok.hook(false)).toBe(hook)
@@ -79,12 +92,19 @@ const runTests = () => {
     expect(e.stack).toMatch(/assertion:/)
   })
 
-  test('failing callback', () => {
+  test('ok() failing callback', () => {
     ok.hook(fail)
     const e = getThrown(() => ok(undefined, 1, fail, 2))
     expect(e.message).toMatch(/assertion\scallback/i)
     expect(e.stack).toMatch(/assertion:/)
-  }) /*  */
+  })
+
+  test('fail() failing callback', () => {
+    ok.hook(fail)
+    const e = getThrown(() => ok.fail(TypeError, 1, fail, 2))
+    expect(e.message).toBe('Intentional at assert-fine.fail callback')
+    expect(e).not.toBeInstanceOf(TypeError)
+  })
 }
 
 module.exports = runTests
