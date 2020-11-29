@@ -78,7 +78,7 @@ const ok = (value, ...args) => {
 /**
  * Throws a specific error instance.
  *
- * @param {Error | function} Err
+ * @param {Error | ErrorConstructor} Err
  * @param {...*} args
  */
 const fail = (Err, ...args) => {

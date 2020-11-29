@@ -60,11 +60,11 @@ Similar to Node.js native `assert.ok()`, except that:
 Composing the message:
    1. if one of the optional arguments is a function, it will be
     replaced with its returned value after applying the rest or arguments to it.
-   1. resulting arguments are applied to Node.js _`format()`_ function.
+   1. resulting arguments will be applied to Node.js _`format()`_ function.
 
 This function is package's **_default export_** as well.
    
-**`fail`**`( error, ...args )
+**`fail`**`( error, ...args )`
 
 Throws an error with message composed of _`args`_ in the same way the _`ok()`_ does,
 but if _`error`_ argument:
