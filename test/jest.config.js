@@ -2,16 +2,17 @@
 module.exports = {
   bail: 1,
   collectCoverage: true,
-  collectCoverageFrom: ['*.js', '!.*'],
+  collectCoverageFrom: ['src/*.js', '!.*'],
   coverageDirectory: 'reports',
   projects: [
     {
       rootDir: '.',
-      testMatch: ['<rootDir>/test/back-*'],
-      testEnvironment: 'node'
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/test/back-*']
     },
     {
       rootDir: '.',
+      testEnvironment: 'jsdom',
       testMatch: ['<rootDir>/test/front-*']
     }
   ],

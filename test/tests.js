@@ -12,98 +12,123 @@ const getThrown = fn => {
 }
 
 //  Actual tests.
-const runTests = () => {
-  let AssertionError, ok, providedArgs, restOfArgs
+const runTests = (target, pref) => {
+  let thrown, providedArgs, restOfArgs
+  const { AssertionError, fail, hook, ok, use } = target
 
-  const fail = () => {
+  const checkFail = (e, message, type) => {
+    expect(e).toBeInstanceOf(type || AssertionError)
+    expect(e).toMatchObject({ message })
+    if (!type) expect(e).toMatchObject({ operator: 'fail' })
+  }
+
+  const failFn = () => {
     throw new Error('Intentional')
   }
 
   const funcArg = (...args) => ('F(' + (restOfArgs = args.slice()).join(',') + ')')
 
-  const hook = args => {
+  const hookFn = (exception, args) => {
+    thrown = exception
     providedArgs = args.slice()
   }
 
   beforeEach(() => {
-    if (!ok) AssertionError = (ok = require('..')).AssertionError
-    providedArgs = restOfArgs = undefined
+    providedArgs = restOfArgs = thrown = undefined
+    hook(undefined)
   })
 
-  test('API', () => {
-    expect(ok.ok).toBe(ok)
+  it(pref + 'API', () => {
+    expect(typeof target).toBe('function')
+    expect(typeof ok).toBe('function')
+    expect(typeof fail).toBe('function')
+    expect(typeof hook).toBe('function')
+    expect(typeof use).toBe('function')
     expect(typeof AssertionError).toBe('function')
   })
 
-  test('hook setting', () => {
-    expect(ok.hook()).toBe(undefined)
-    expect(ok.hook(hook)).toBe(undefined)
-    expect(ok.hook()).toBe(hook)
+  it(pref + 'hook setting', () => {
+    expect(hook()).toBe(undefined)
+    expect(hook(hookFn)).toBe(undefined)
+    expect(hook()).toBe(hookFn)
+    expect(() => hook({})).toThrow(TypeError)
   })
 
-  test('successful assertion', () => {
-    expect(ok('yes', 1, funcArg, 2)).toBe('yes')
-    expect(providedArgs || restOfArgs).toBe(undefined)
+  it(pref + 'failing assertion w/o args', () => {
+    expect(() => target(false)).toThrow('false == true')
+    expect(() => target('')).toThrow("'' == true")
+    expect(() => target()).toThrowError('No value argument passed')
   })
 
-  test('failing assertion w/o args', () => {
-    expect(() => ok(false)).toThrow('false == true')
-    expect(() => ok('')).toThrow("'' == true")
-  })
-
-  test('failing assertion w simple message', () => {
-    const e = getThrown(() => ok(0, 1, 2))
+  it(pref + 'failing assertion w simple message', () => {
+    hook(hookFn)
+    const e = getThrown(() => target(0, 1, 2))
     expect(e).toBeInstanceOf(AssertionError)
     expect(e.stack).not.toMatch(/assertion:/)
     expect(e.message).toBe('1 2')
-    expect(providedArgs).toEqual([1, 2])
+    expect(providedArgs).toEqual([0, 1, 2])
   })
 
-  test('failing assertion w composed message', () => {
-    const e = getThrown(() => ok(0, '(%s,%s)', '%s', funcArg, 2, 3))
+  it(pref + 'failing assertion w composed message', () => {
+    const e = getThrown(() => target(0, '(%s,%s)', '%s', funcArg, 2, 3))
     expect(e).toBeInstanceOf(AssertionError)
     expect(e.message).toBe('(%s,F(2,3))')
   })
 
-  test('throwing typed error', () => {
-    let e = getThrown(() => ok.fail(TypeError, '%o', 'T'))
-    expect(e).toBeInstanceOf(TypeError)
-    expect(e.message).toBe("'T'")
-    expect(getThrown(() => ok.fail(e, 'U'))).toBe(e)
-    expect(e.message).toBe('U')
-    expect(e.originalMessage).toBe("'T'")
-    expect(e = getThrown(() => (ok.fail({}, 'W')))).toBeInstanceOf(Error)
-    expect(e).not.toBeInstanceOf(AssertionError)
-    expect(e.message).toBe('assert.fail: bad argument')
-    expect(e.originalMessage).toBe('W')
+  it(pref + 'should fail()', () => {
+    let e
+    checkFail(e = getThrown(() => fail(TypeError, 'E %o', 'T')), "E 'T'", TypeError)
+    expect(getThrown(() => fail(e, ' U'))).toBe(e)
+    expect(e.message).toBe('E \'T\' U')
+    checkFail(getThrown(() => (fail({}, 'W'))), '[object Object] W')
+    checkFail(getThrown(() => (fail())), 'Failed')
   })
 
-  test('resetting hook', () => {
-    providedArgs = restOfArgs = undefined
-    expect(ok.hook(false)).toBe(hook)
-    expect(ok.hook(false)).toBe(undefined)
-    expect(() => ok(undefined, 1, funcArg, 2, funcArg, 3)).toThrow(AssertionError)
+  it(pref + 'hook amending the message', () => {
+    hook((e, args) => args.map(v => v > 0 ? -v : v))
+    const e = getThrown(() => fail('F %o %o %o!', -2, '', 3))
+    expect(e).toBeInstanceOf(AssertionError)
+    expect(e.message).toBe('F -2 \'\' -3!')
+    expect(e.originalMessage).toBe('F -2 \'\' 3!')
+  })
+
+  it(pref + 'resetting hook', () => {
+    hook(hookFn)
+    expect(hook(false)).toBe(hookFn)
+    expect(hook(0)).toBe(false)
+    expect(hook(false)).toBe(0)
+    expect(() => target(undefined, 1, funcArg, 2, funcArg, 3)).toThrow(AssertionError)
     expect(restOfArgs).toEqual([2, funcArg, 3])
   })
 
-  test('failing funcArg', () => {
-    const e = getThrown(() => ok('', 1, fail, 2))
-    expect(e.message).toMatch(/assertion\sformatting/i)
-    expect(e.stack).toMatch(/assertion:/)
+  it(pref + 'failing funcArg', () => {
+    const e = getThrown(() => target('', 1, failFn, 2))
+    expect(e.message).toBe('Intentional')
+    expect(e).toBeInstanceOf(Error)
   })
 
-  test('ok() failing callback', () => {
-    ok.hook(fail)
-    const e = getThrown(() => ok(undefined, 1, fail, 2))
-    expect(e.message).toMatch(/assertion\scallback/i)
-    expect(e.stack).toMatch(/assertion:/)
+  it(pref + 'failing callback', () => {
+    hook(failFn)
+    const e = getThrown(() => target(undefined, 'E %d %d', 1, 2))
+    expect(e.message).toBe('Unexpected error from callback')
+    expect(e.originalMessage).toBe('E 1 2')
   })
 
-  test('fail() failing callback', () => {
-    ok.hook(fail)
-    const e = getThrown(() => ok.fail(TypeError, 1, fail, 2))
-    expect(e.message).toBe('Intentional at assert-fine.fail callback')
-    expect(e).not.toBeInstanceOf(TypeError)
+  it(pref + 'failing re-formatting', () => {
+    let was = false
+    const fn = (...args) => {
+      if (was) throw new Error('Failed')
+      was = true
+      return args.join('-')
+    }
+    hook((err, args) => args.slice(1))                //  eslint-disable-line
+    const e = getThrown(() => target(0, fn, 1, 2))
+    expect(e.message).toBe('Unexpected error from re-formatting')
+    expect(e.originalMessage).toBe('1-2')
+  })
+
+  it(pref + 'use() should fail w bad API', () => {
+    expect(() => use({ pref })).toThrow(TypeError)
   })
 }
 

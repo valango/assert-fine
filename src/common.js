@@ -3,7 +3,7 @@
 
 const failWithType = require('./type_error')
 
-const toSkip = 'AssertionError fail hook length ok prototype strict'.split(' ')
+const toSkip = 'fail hook length name ok prototype strict'.split(' ')
 
 module.exports = (native, format) => {
   let AssertionError, callback
@@ -30,7 +30,7 @@ module.exports = (native, format) => {
     return message
   }
 
-  const innerThrow = (exception) => {
+  const innerThrow = (exception, args) => {
     let result = compose
 
     try {
@@ -47,28 +47,30 @@ module.exports = (native, format) => {
     throw exception
   }
 
-  const fail = (...args) => {
+  function fail (...args) {
     let exception, message
 
     if (args.length) {
       if (args[0] instanceof Error) {
         exception = args[0]
-        message = compose(args.slice(1))
+        exception.message += compose(args.slice(1)) || ''
+      } else if (typeof args[0] === 'function') {
+        exception = new args[0](compose(args.slice(1)) || 'Failed')
       } else {
         message = compose(args)
       }
     }
     if (!exception) {
       exception = new AssertionError(
-        { message: message | 'Failed', operator: 'fail', stackStartFn: fail })
+        { message: message || 'Failed', operator: 'fail', stackStartFn: fail })
       exception.generatedMessage = !message
     }
-    innerThrow(exception)
+    innerThrow(exception, args)
   }
 
   const innerOk = (stackStartFn, args) => {
     if (!args.length) {
-      innerOk(stackStartFn, 'No value argument passed to `assert.ok()`')
+      innerOk(stackStartFn, [undefined, 'No value argument passed to `assert.ok()`'])
     } else if (!args[0]) {
       innerThrow(new AssertionError({
         actual: args[0],
@@ -76,11 +78,13 @@ module.exports = (native, format) => {
         message: compose(args.slice(1)),
         operator: '==',
         stackStartFn
-      }))
+      }), args)
     }
   }
 
-  const ok = (...args) => innerOk(ok, args)
+  function ok (...args) {
+    innerOk(ok, args)
+  }
 
   /**
    * Sets new callback function if provided and returns the previous one.
@@ -89,12 +93,12 @@ module.exports = (native, format) => {
    * @returns {function(*)|undefined} previous callback.
    * @throws {AssertionError} when non-falsy non-function argument is provided.
    */
-  const hook = (cb = compose) => {
+  function hook (cb) {
     const old = callback
 
-    if (cb !== compose) {
-      if(cb && typeof cb !== 'function') {
-        failWithType('hook callback must be of type function. Received '+cb)
+    if (arguments.length) {
+      if (cb && typeof cb !== 'function') {
+        failWithType('hook callback must be of type function. Received ' + cb)
       }
       callback = cb
     }
@@ -108,7 +112,7 @@ module.exports = (native, format) => {
         dst[key] = src[key]
       }
     }
-    return Object.assign(dst, { fail, hook, ok })
+    return Object.assign(dst, { fail, hook, ok, use })
   }
 
   /**
@@ -117,7 +121,7 @@ module.exports = (native, format) => {
    * @returns {Object}
    * @throws {TypeError} when package does not expose AssertionError.
    */
-  const use = (assert) => {
+  function use (assert) {
     if (!assert || typeof assert.AssertionError !== 'function') {
       failWithType(
         'The "assert" argument must be of type object containing AssertionError. Received ' + assert)

@@ -1,24 +1,23 @@
 'use strict'
 /* eslint-env jest */
 
-/**
- ** @testEnvironment node
- */
 
 const tests = require('./tests')
-// const browser = require('../browser')
 
-describe('front-end: with assert npm package', () => {
-  beforeAll(() => jest.resetModules())
+describe('front-end', () => {
+  const saved = process.browser
 
-  tests()
-})
+  afterAll(() => (process.browser = saved))
 
-describe('front-end: without assert npm package', () => {
-  beforeAll(() => {
-    jest.resetModules()
-    require('../browser').assert = undefined
+  process.browser = true
+  jest.resetModules()
+
+  const target = require('..')
+
+  it('should load', () => {
+    expect(target.ok).toBe(target)
+    expect(target.strict).toBe(undefined)
   })
 
-  tests()
+  tests(target, '')
 })

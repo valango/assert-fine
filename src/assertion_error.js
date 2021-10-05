@@ -11,6 +11,7 @@
  */
 
 const failWithType = require('./type_error')
+const format = require('format')
 
 const myCode = 'ERR_ASSERTION'
 
@@ -23,7 +24,7 @@ class AssertionError extends Error {
     }
     const { actual, expected, message, operator } = options
 
-    super(message || `${actual} ${operator} ${expected}`)
+    super(message || format('%o %s %o', actual, operator, expected))
 
     this.actual = actual
     this.code = myCode
