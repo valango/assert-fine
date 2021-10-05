@@ -1,7 +1,6 @@
 'use strict'
 /* eslint-env jest */
 
-
 const tests = require('./tests')
 
 describe('front-end', () => {

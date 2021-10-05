@@ -32,14 +32,11 @@
     "clean": "rimraf *.tmp *.l* reports",
     "lint": "eslint .",
     "purge": "npm run clean && rimraf node_modules",
+    "t": "jest --config test/jest.config.js test/format.spec.js",
     "test": "jest --config test/jest.config.js",
     "test:coverage": "codecov"
   },
-  "dependencies": {
-    "format": "^0.2.2"
-  },
   "devDependencies": {
-    "assert": "^2.0.0",
     "codecov": "^3.8.1",
     "eslint": "^7.14.0",
     "eslint-config-standard": "^16.0.2",

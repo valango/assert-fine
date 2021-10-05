@@ -8,7 +8,7 @@ module.exports = {
     {
       rootDir: '.',
       testEnvironment: 'node',
-      testMatch: ['<rootDir>/test/back-*']
+      testMatch: ['<rootDir>/test/back-*', '<rootDir>/test/fo*']
     },
     {
       rootDir: '.',

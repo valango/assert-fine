@@ -11,7 +11,7 @@
  */
 
 const failWithType = require('./type_error')
-const format = require('format')
+const format = require('./format')
 
 const myCode = 'ERR_ASSERTION'
 

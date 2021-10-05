@@ -4,7 +4,7 @@
 console.log('LD: browser')
 
 const common = require('./common')
-const format = require('format')
+const format = require('./format')
 
 const AssertionError = window.AssertionError || require('./assertion_error')
 
