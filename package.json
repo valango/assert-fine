@@ -2,7 +2,8 @@
   "name": "assert-fine",
   "version": "1.2.2",
   "description": "A tiny utility for finding a cause of seemingly random failures in your code.",
-  "main": "index.js",
+  "browser": "src/browser.js",
+  "main": "src/index.js",
   "homepage": "https://github.com/valango/assert-fine#readme",
   "repository": {
     "type": "git",
@@ -25,9 +26,7 @@
     "state"
   ],
   "files": [
-    "index.js",
-    "browser.js",
-    "fallback.js"
+    "src"
   ],
   "scripts": {
     "clean": "rimraf *.tmp *.l* reports",
@@ -35,6 +34,9 @@
     "purge": "npm run clean && rimraf node_modules",
     "test": "jest --config test/jest.config.js",
     "test:coverage": "codecov"
+  },
+  "dependencies": {
+    "format": "^0.2.2"
   },
   "devDependencies": {
     "assert": "^2.0.0",
