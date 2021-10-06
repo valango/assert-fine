@@ -1,22 +1,26 @@
 'use strict'
 /* eslint-env jest */
 
+/**
+ * @jest-environment jsdom
+ */
+
 const tests = require('./tests')
+const saved = process.browser
 
-describe('front-end', () => {
-  const saved = process.browser
+describe('front-end default', () => {
+  process.browser = true
+  jest.resetModules()
 
+  tests(require('..'), '')
+})
+
+describe('front-end w assert', () => {
   afterAll(() => (process.browser = saved))
 
   process.browser = true
   jest.resetModules()
-
-  const target = require('..')
-
-  it('should load', () => {
-    expect(target.ok).toBe(target)
-    expect(target.strict).toBe(undefined)
-  })
-
-  tests(target, '')
+  tests(require('..'), '', require('assert'))
+  jest.resetModules()
+  tests(require('..'), 'strict ', require('assert'))
 })

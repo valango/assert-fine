@@ -1,7 +1,7 @@
 //  /browser.js
 'use strict'
 
-console.log('LD: browser')
+// process.stdout.write('LD: assert-fine/browser\n')
 
 const common = require('./common')
 const format = require('./format')

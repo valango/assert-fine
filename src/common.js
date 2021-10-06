@@ -127,13 +127,15 @@ module.exports = (native, format) => {
         'The "assert" argument must be of type object containing AssertionError. Received ' + assert)
     }
 
-    AssertionError = native.AssertionError
+    AssertionError = assert.AssertionError
     enhance(ok, assert)
 
-    if (native.strict) {
+    if (assert.strict) {
       const strict = ok.strict = (...args) => innerOk(strict, args)
 
       enhance(strict.strict = strict, assert.strict)
+    } else {
+      delete ok.strict
     }
     ok.use = use
 

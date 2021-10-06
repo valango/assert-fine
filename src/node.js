@@ -1,7 +1,7 @@
 //  /node.js
 'use strict'
 
-console.log('LD: node')
+// process.stdout.write('LD: assert-fine/node\n')
 
 const common = require('./common')
 const assert = require('assert')

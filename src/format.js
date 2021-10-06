@@ -5,7 +5,7 @@
 const d = (v) => (typeof v === 'number' ? v + '' : 'NaN')
 const i = (v) => (parseInt(v, 10) + '')
 const j = (v) => JSON.stringify(v)
-//  Todo: bring this closer to Node.js behavior.
+//  Todo: bring %o closer to Node.js format behavior.
 const o = (v) => typeof v === 'string'
   ? `'${v}'`
   : (typeof v === 'object' ? j(v).split('"').join('') : (v + ''))

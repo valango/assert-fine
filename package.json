@@ -37,6 +37,7 @@
     "test:coverage": "codecov"
   },
   "devDependencies": {
+    "assert": "^2.0.0",
     "codecov": "^3.8.1",
     "eslint": "^7.14.0",
     "eslint-config-standard": "^16.0.2",
@@ -47,6 +48,7 @@
     "rimraf": "^3.0.2"
   },
   "engines": {
+    "npm": ">=7.0.0",
     "node": ">=10.15.1"
   }
 }
