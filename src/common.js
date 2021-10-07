@@ -69,7 +69,7 @@ module.exports = (native, format) => {
   }
 
   function ifError (actual, ...args) {
-    if (!(actual === undefined || actual === null)) {
+    if (!(actual === null || actual === undefined)) {
       let message = 'ifError got unwanted exception: ' +
         ((actual && typeof actual === 'object' && typeof actual.message === 'string')
           ? actual.message

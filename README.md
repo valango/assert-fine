@@ -61,7 +61,7 @@ featuring the lazy formatting and invoking the callback set via `beforeThrow()`.
 `failure: Error | function `- if a function supplied, it is treated as Error constructor,
 and error instance is created with `message` property composed of args;
 if _`Error`_ instance is supplied, the string composed of args is appended to its `message`.<br/>
-`...args: any ``- optional arguments. If the first one is a string, it will be supplied to `util.format`
+`...args: any ` - optional arguments. If the first one is a string, it will be supplied to `util.format`
 or to its front-end substitute. If any of the arguments is a function, it will be called
 with the rest opf arguments supplying its return value to `format()`.
 
