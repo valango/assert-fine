@@ -1,104 +1,109 @@
 # assert-fine
 [![Build Status](https://travis-ci.org/valango/assert-fine.svg?branch=master)](https://travis-ci.org/valango/assert-fine)  [![Code coverage](https://codecov.io/gh/valango/assert-fine/branch/master/graph/badge.svg)](https://codecov.io/gh/valango/assert-fine)
 
-This lightweight wrapper makes assertion testing much easier.
+A lightweight wrapper making assertion testing much easier.
 
-## Motivation
+## Why and How
 1. After assertion failure, we'll have stack trace, showing the execution context.
-Sometimes this is not enough - we need a _**detailed view of dynamic data**_, even
-interactive debugging, _before_ the `AssertionError` gets thrown.
-1. Adding formatting support to assertion messages would make them more useful,
-but at cost of additional code and performance penalty. `assert-fine` solves this issue
-by providing _**lazy formatting feature**_ to `assert.ok()` and `assert.fail()`.
-1. This package also works with front-end code, providing a minimalistic `assert` functionality by default.
+But sometimes we need a _**detailed view of dynamic data**_, even
+_**interactive debugging**_, _before_ _`AssertionError`_ is thrown.<br />
+The [`beforeThrow()`](#function-beforethrowcallback) hook makes it easy.
+1. Including dynamic data to assertion messages comes at cost of additional code and
+performance penalty.<br />
+The overridden [`ok()`](#function-ok-value-args-) and
+[`fail()`](#function-fail-failure-args-) functions feature _**lazy formatting**_
+in a backwards-compatible manner.
+1. Front-end assertion is supported too, with minimalistic API of `(AssertionError, fail, ifError, ok)`
+by default. So you can use _**same code**_ in both back- and front-end (via a bundler).
+1. The [`use()`](#function-use-engine-) function lets you switch the _assertion engine_ programmatically, w/o re-loading
+any modules.
 
-Running a special code (a callback) was actually a proposed, but rejected _Node.js
+When loaded, the `assert-fine` package object instance transparently wraps around
+the environment-specific
+_**assertion engine**_ like the [Node.js assert](http://nodejs.org/api/assert.html)
+
+The #1 functionality was actually proposed, but rejected _Node.js
 feature request [#5312](https://github.com/nodejs/node/issues/5312)_.
 
-## Install
+## Installation
 `  npm install -S assert-fine`<br />or<br />`  yarn add assert-fine`
 
 ## Usage
-```javascript
+```js
 const assert = require('assert-fine')
-const getDetails = (...args) => ({ args, foo: 'bar' }) // Or whatever...
-let expectedValue = 'good', value, currentOperation
 
-assert.hook((error, args) => {              //  This call is optional.
-  appendToLogs('good-bye, cruel world!')    //  The breakpoint place.
+assert.beforeThrow((error, args) => {   //  This call is optional.
+  doSomething()                         //  The breakpoint place.
 })
 
-currentOpertion = 'expected'
+//  Somewhere in your code
+assert(value === expected, 'assert(%o)', value, someFunction, ...argsForFunction)
 
-assert(value === expected, "%s('%s'): %o",
-  currentOperation, expectedValue, getDetails, 7, 8)
-//  --> "AssertionError: expected('good'): { args: [7, 8], foo: 'bar' }"
-
-//  Some other place - type check has failed, so:
-assert.fail(TypeError, 'expected candy, but got %o instead', typeof someVar)
+assert.equal(value, expected)           //  Is not affected by `assert-fine`.
 ```
+In the example above, the someFunction will be called, and the message is formatted only
+when the assertion fails.
 
-## API
-The package has named exports **_`AssertionError`_**, **_`ok`_**, **_`fail`_** and **_`hook`_**.
+## Package exports (API)
 
-**`ok`**`( value, ...args ) : {*}`
+### Default export
+Default export equals the `ok()` function.
 
-Similar to Node.js native `assert.ok()`, except that:
-   * if the _`value`_ is truey, it  returns the `value`;
-   * if the _`value`_ is falsy, it:
-      * calls _hook callback_;
-      * composes diagnostic message;
-      * throws an _`AssertionError`_ with composed message.
+### function `beforeThrow([callback])`
+If argument is supplied, sets or clears the global callback. Otherwise, just returns<br/>
+**Returns** `any` the global callback previous value.<br/>
+**Throws** `TypeError` if supplied argument is not function nor falsy.
+`callback: any `- should be a falsy value or function, if supplied.
 
-Composing the message:
-   1. if one of the optional arguments is a function, it will be
-    replaced with its returned value after applying the rest or arguments to it.
-   1. resulting arguments will be applied to Node.js _`format()`_ function.
+### function `fail( [failure], ...args )`
+Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_fail_message),
+featuring the lazy formatting and invoking the callback set via `beforeThrow()`. Arguments:<br/>
+`failure: Error | function `- if a function supplied, it is treated as Error constructor,
+and error instance is created with `message` property composed of args;
+if _`Error`_ instance is supplied, the string composed of args is appended to its `message`.<br/>
+`...args: any ``- optional arguments. If the first one is a string, it will be supplied to `util.format`
+or to its front-end substitute. If any of the arguments is a function, it will be called
+with the rest opf arguments supplying its return value to `format()`.
 
-This function is package's **_default export_** as well.
+### function `ifError( value, ...args )`
+Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_iferror_value),
+featuring the lazy formatting and invoking the callback set via `beforeThrow()`. Arguments:<br/>
+`value: any`<br/>
+`...args: any `- optional arguments, working exactly as those of [`fail()`](#function-fail-failure-args-).
 
-**`fail`**`( error, ...args )`
+### function `ok( value, ...args )`
+Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_ok_message),
+featuring the lazy formatting and invoking the callback set via `beforeThrow()`. Arguments:<br/>
+`value: any`<br/>
+`...args: any `- optional arguments, working exactly as those of [`fail()`](#function-fail-failure-args-).
 
-Throws an error with message composed of _`args`_ in the same way the _`ok()`_ does,
-but if _`error`_ argument:
-   * is a constructor of _`Error`_ or any of its child classes, then
-     constructs a new instance and throws it.
-   * is an _`Error`_ instance, then copies its _`message`_ property
-   to _`originalMessage`_, sets new _`message`_ and throws the instance.
-   * is anything else, then throws an _`Error`_ instance with _`message`_
-   and _`originalMessage`_ composed of  _`args`_.
+### function `use( engine )`
+Wraps the assertion engine, putting it into use
 
-The exceptions from here also invoke the _hook callback_, when set..
+This function is called internally upon
+loading the package, with Node.js built-in _`assert`_ package or with its own substitute,
+when loaded via a bundler ([browserify](https://browserify.org/), [webpack](https://webpack.js.org/),
+[rollup](https://rollupjs.org) or similar.)<br/>
+You might need this function when using something like
+[assert](https://github.com/browserify/commonjs-assert) package for front-end.
 
-**`hook`**`( [ callback ] ) : {function(error, args: *[]): * | undefined}`
+This function does not modify the supplied engine in any way, and<br/>
+it does not alter the exported ( _`beforeThrow, fail, ok, use`_ ) values either.
 
-Sets new callback function if provided and returns the previous one. Falsy argument results
-callback set to `undefined`; otherwise the argument has to be a function or assertion will be thrown.
-Calling with `undefined` value will not change the callback.
+All other properties of the engine argument will be assigned to the already exported API.
 
-When called, the callback receives original `args` of _assertOk_ call as an array and
-if it returns an array itself, this will replace the `args` array for message composition.
+### property `strict?: function()`
+Is present only if the assertion engine in use has such property
+(see [Node.js docs](http://nodejs.org/api/assert.html)), it will be mirrored to the
+package object instance. For subtle details, see the [source code](src/common.js).
 
-**`AssertionError`** class
+### Other properties
+Any properties of the assertion engine, not shadowed by the API described above,
+will be directly assigned to package object instance.
 
-For use with `instanceof` operator. It has the same properties as it's Node.js counterpart.
+## Acknowledgements
+[assert](https://github.com/browserify/commonjs-assert) NPM package - I borrowed quite some
+pieces of code from there - thanks a lot, folks!
 
-In front-end code, the message and stack values may be slightly different from what they
-might be in case of Node.js assert.
-
-When error occurs in hook callback or during formatting, the `.message` and `.stack` property values
-of `AssertionError` instance will indicate this. If this happens, the `.message` will be multi-line
-string similar to:
-
-```
-Assertion callback failed too!
-  Error: Intentional
-    at apply (/Users/me/dev/_components/assert-fine/test/main.spec.js:15:11)
-    at ok (/Users/me/dev/_components/assert-fine/index-old.js:37:24)
-    ...
-    at processTicksAndRejections (internal/process/task_queues.js:97:5)
-  assertion:
-```
-
-In both cases the `.stack` will have the original assertion stack dump available after
-the `'assertion:'` line.
+[debug](https://github.com/visionmedia/debug) NPM package - inspecting its source code
+helped me to fix the disastrous bug (issue #1) of this package - thanks again!

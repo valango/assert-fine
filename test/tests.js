@@ -13,11 +13,11 @@ const getThrown = fn => {
 
 //  Actual tests.
 const runTests = (target, prefix, assert = undefined) => {
-  const doStrict = prefix.indexOf('strict') >= 0, original = target
+  const doStrict = prefix.indexOf('strict') >= 0
   let providedArgs, restOfArgs
 
   if (assert) {
-    target = target.use(assert)
+    target.use(assert)
   }
 
   const { AssertionError, fail, hook, ok, use } = target
@@ -44,7 +44,6 @@ const runTests = (target, prefix, assert = undefined) => {
   })
 
   it(prefix + 'API', () => {
-    expect(target).toBe(original)             //  May fail only with `assert` set.
     expect(typeof target).toBe('function')
     expect(typeof fail).toBe('function')
     expect(typeof hook).toBe('function')
@@ -144,6 +143,14 @@ const runTests = (target, prefix, assert = undefined) => {
   it(prefix + 'use() should fail w bad API', () => {
     expect(() => use({ prefix })).toThrow(TypeError)
   })
+
+  if (assert && target.equal && target.strict) {
+    it(prefix + 'use() should clear the previous API', () => {
+      use({ AssertionError })
+      expect(target).not.toHaveProperty('equal')
+      expect(target).not.toHaveProperty('strict')
+    })
+  }
 }
 
 module.exports = runTests

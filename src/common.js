@@ -118,7 +118,6 @@ module.exports = (native, format) => {
   /**
    * Uses the given native assertion package.
    * @param {Object} assert
-   * @returns {Object}
    * @throws {TypeError} when package does not expose AssertionError.
    */
   function use (assert) {
@@ -127,6 +126,11 @@ module.exports = (native, format) => {
         'The "assert" argument must be of type object containing AssertionError. Received ' + assert)
     }
 
+    for (const key of Reflect.ownKeys(ok)) {
+      if (!(toSkip.includes(key))) {
+        delete ok[key]
+      }
+    }
     AssertionError = assert.AssertionError
     enhance(ok, assert)
 
@@ -138,9 +142,9 @@ module.exports = (native, format) => {
       delete ok.strict
     }
     ok.use = use
-
-    return ok
   }
 
-  return use(native)
+  use(native)
+
+  return ok
 }

@@ -1,7 +1,7 @@
 {
   "name": "assert-fine",
   "version": "1.2.2",
-  "description": "A tiny utility for finding a cause of seemingly random failures in your code.",
+  "description": "A lightweight wrapper making assertion testing much easier.",
   "browser": "src/browser.js",
   "main": "src/index.js",
   "homepage": "https://github.com/valango/assert-fine#readme",
@@ -17,12 +17,12 @@
     "backend",
     "breakpoint",
     "browser",
+    "format",
     "front-end",
     "frontend",
-    "node.js",
     "lazy",
     "lightweight",
-    "random failures",
+    "node.js",
     "state"
   ],
   "files": [
