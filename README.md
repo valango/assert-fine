@@ -125,7 +125,7 @@ This function, if set  via [`beforeThrow()`](#function-beforethrowcallback), sho
 as simple as possible. It's typical use is just to provide a code line for debugger breakpoint.
 
 If the callback itself throws an error, it will be stored in assertion instance's _`extra`_
-property and its _`message`_ will be appended to the assertion message.
+property and its _`message`_ will be appended to the assertion message using '[EXTRA]:' prefix.
 
 The callback receives two arguments:<br/>
 `error: Error` - the instance that will be thrown;<br/>

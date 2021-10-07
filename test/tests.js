@@ -20,7 +20,7 @@ const runTests = (target, prefix, assert = undefined) => {
     target.use(assert)
   }
 
-  const { beforeThrow, use } = target
+  const { beforeThrow, strict, use } = target
   const { AssertionError, fail, ifError, ok } = doStrict ? target.strict : target
 
   const checkFail = (e, message, type) => {
@@ -55,6 +55,8 @@ const runTests = (target, prefix, assert = undefined) => {
       expect(fail).toBe(target.fail)
       expect(ifError).toBe(target.ifError)
       expect(ok).toBe(target.ok)
+      expect(typeof strict).toBe('function')
+      expect(strict).not.toBe(ok)
     } else {
       if (process.browser && !assert) expect(target).not.toHaveProperty('strict')
       expect(target).toBe(ok)
@@ -69,14 +71,16 @@ const runTests = (target, prefix, assert = undefined) => {
   })
 
   it(prefix + 'failing assertion w/o args', () => {
-    expect(() => target(false)).toThrow('false == true')
-    expect(() => target('')).toThrow("'' == true")
-    expect(() => target()).toThrowError('No value argument passed')
+    expect(() => ok(false)).toThrow('false == true')
+    expect(() => ok('')).toThrow("'' == true")
+    strict && expect(() => strict(false)).toThrow('false == true')
+    strict && expect(() => strict('')).toThrow("'' == true")
+    expect(() => ok()).toThrowError('No value argument passed')
   })
 
   it(prefix + 'failing assertion w simple message', () => {
     beforeThrow(hookFn)
-    const e = getThrown(() => target(0, 1, 2))
+    const e = getThrown(() => ok(0, 1, 2))
     expect(e).toBeInstanceOf(AssertionError)
     expect(e.stack).not.toMatch(/assertion:/)
     expect(e.message).toBe('1 2')
@@ -84,7 +88,7 @@ const runTests = (target, prefix, assert = undefined) => {
   })
 
   it(prefix + 'failing assertion w composed message', () => {
-    const e = getThrown(() => target(0, '(%s,%s)', '%s', funcArg, 2, 3))
+    const e = getThrown(() => ok(0, '(%s,%s)', '%s', funcArg, 2, 3))
     expect(e).toBeInstanceOf(AssertionError)
     expect(e.message).toBe('(%s,F(2,3))')
   })
@@ -115,12 +119,12 @@ const runTests = (target, prefix, assert = undefined) => {
     expect(beforeThrow(false)).toBe(hookFn)
     expect(beforeThrow(0)).toBe(false)
     expect(beforeThrow(false)).toBe(0)
-    expect(() => target(undefined, 1, funcArg, 2, funcArg, 3)).toThrow(AssertionError)
+    expect(() => ok(undefined, 1, funcArg, 2, funcArg, 3)).toThrow(AssertionError)
     expect(restOfArgs).toEqual([2, funcArg, 3])
   })
 
   it(prefix + 'failing funcArg', () => {
-    const e = getThrown(() => target('', 1, failFn, 2))
+    const e = getThrown(() => ok('', 1, failFn, 2))
     expect(e.message).toBe('Int')
     expect(e).toBeInstanceOf(Error)
     expect(e).not.toBeInstanceOf(AssertionError)
@@ -128,7 +132,7 @@ const runTests = (target, prefix, assert = undefined) => {
 
   it(prefix + 'failing callback', () => {
     beforeThrow(failFn)
-    const e = getThrown(() => target(undefined, 'E %d %d', 1, 2))
+    const e = getThrown(() => ok(undefined, 'E %d %d', 1, 2))
     expectedObject = {
       actual: '',
       code: 'ERR_ASSERTION',
@@ -136,7 +140,7 @@ const runTests = (target, prefix, assert = undefined) => {
       extra: intentional,
       operator: 'ifError'
     }
-    expect(e.message).toBe('E 1 2')
+    expect(e.message).toBe('E 1 2 [EXTRA]: Int')
   })
 
   it(prefix + 'use() should fail w bad API', () => {

@@ -35,6 +35,7 @@ module.exports = (native, format) => {
       try {
         callback(exception, args)
       } catch (err) {
+        exception.message += ' [EXTRA]: ' + err.message
         exception.extra = err
       }
     }

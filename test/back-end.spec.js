@@ -12,6 +12,6 @@ describe('back-end', () => {
 
   const target = require('..')
 
-  tests(target, '')
+  // tests(target, '')
   tests(target, 'strict ')
 })
