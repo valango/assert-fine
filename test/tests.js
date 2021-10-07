@@ -14,18 +14,18 @@ const getThrown = fn => {
 //  Actual tests.
 const runTests = (target, prefix, assert = undefined) => {
   const doStrict = prefix.indexOf('strict') >= 0
-  let providedArgs, restOfArgs
+  let providedArgs, restOfArgs, expectedObject
 
   if (assert) {
     target.use(assert)
   }
 
-  const { AssertionError, fail, hook, ok, use } = target
+  const { beforeThrow, AssertionError, fail, ifError, ok, use } = target
 
   const checkFail = (e, message, type) => {
     expect(e).toBeInstanceOf(type || AssertionError)
-    expect(e).toMatchObject({ message })
-    if (!type) expect(e).toMatchObject({ operator: 'fail' })
+    expect(e.message).toBe(message)
+    if (!type) expect(e).toMatchObject(expectedObject)
   }
 
   const failFn = () => {
@@ -39,20 +39,21 @@ const runTests = (target, prefix, assert = undefined) => {
   }
 
   beforeEach(() => {
+    expectedObject = { operator: 'fail' }
     providedArgs = restOfArgs = undefined
-    hook(undefined)
+    beforeThrow(undefined)
   })
 
   it(prefix + 'API', () => {
     expect(typeof target).toBe('function')
     expect(typeof fail).toBe('function')
-    expect(typeof hook).toBe('function')
+    expect(typeof beforeThrow).toBe('function')
     expect(typeof use).toBe('function')
     expect(typeof AssertionError).toBe('function')
     if (doStrict) {
       if (!assert) expect(target).toBe(ok.strict.strict)
       expect(fail).toBe(ok.fail)
-      expect(hook).toBe(ok.hook)
+      expect(beforeThrow).toBe(ok.beforeThrow)
       expect(use).toBe(ok.use)
     } else {
       if (process.browser && !assert) expect(target).not.toHaveProperty('strict')
@@ -60,11 +61,11 @@ const runTests = (target, prefix, assert = undefined) => {
     }
   })
 
-  it(prefix + 'hook setting', () => {
-    expect(hook()).toBe(undefined)
-    expect(hook(hookFn)).toBe(undefined)
-    expect(hook()).toBe(hookFn)
-    expect(() => hook({})).toThrow(TypeError)
+  it(prefix + 'beforeThrow setting', () => {
+    expect(beforeThrow()).toBe(undefined)
+    expect(beforeThrow(hookFn)).toBe(undefined)
+    expect(beforeThrow()).toBe(hookFn)
+    expect(() => beforeThrow({})).toThrow(TypeError)
   })
 
   it(prefix + 'failing assertion w/o args', () => {
@@ -74,7 +75,7 @@ const runTests = (target, prefix, assert = undefined) => {
   })
 
   it(prefix + 'failing assertion w simple message', () => {
-    hook(hookFn)
+    beforeThrow(hookFn)
     const e = getThrown(() => target(0, 1, 2))
     expect(e).toBeInstanceOf(AssertionError)
     expect(e.stack).not.toMatch(/assertion:/)
@@ -93,23 +94,35 @@ const runTests = (target, prefix, assert = undefined) => {
     checkFail(e = getThrown(() => fail(TypeError, 'E %o', 'T')), "E 'T'", TypeError)
     expect(getThrown(() => fail(e, ' U'))).toBe(e)
     expect(e.message).toBe('E \'T\' U')
+    expectedObject = { code: 'ERR_ASSERTION', operator: 'fail' }
     checkFail(getThrown(() => (fail({}, 'W'))), '[object Object] W')
     checkFail(getThrown(() => (fail())), 'Failed')
   })
 
-  it(prefix + 'hook amending the message', () => {
-    hook((e, args) => args.map(v => v > 0 ? -v : v))
+  it(prefix + 'beforeThrow amending the message', () => {
+    beforeThrow((e, args) => args.map(v => v > 0 ? -v : v))
     const e = getThrown(() => fail('F %o %o %o!', -2, '', 3))
     expect(e).toBeInstanceOf(AssertionError)
     expect(e.message).toBe('F -2 \'\' -3!')
     expect(e.originalMessage).toBe('F -2 \'\' 3!')
   })
 
-  it(prefix + 'resetting hook', () => {
-    hook(hookFn)
-    expect(hook(false)).toBe(hookFn)
-    expect(hook(0)).toBe(false)
-    expect(hook(false)).toBe(0)
+  it(prefix + 'ifError()', () => {
+    expect(ifError()).toBe(undefined)
+    expect(ifError(null)).toBe(undefined)
+    expect(ifError(undefined)).toBe(undefined)
+    expectedObject = { actual: '', code: 'ERR_ASSERTION', expected: null, operator: 'ifError' }
+    checkFail(getThrown(() => (ifError(''))), "ifError got unwanted exception: ''")
+    checkFail(getThrown(() => (ifError('', '%o', ''))), "ifError got unwanted exception: ''''")
+    const e = expectedObject.actual = new Error('x')
+    checkFail(getThrown(() => (ifError(e, '+'))), "ifError got unwanted exception: x+")
+  })
+
+  it(prefix + 'resetting beforeThrow', () => {
+    beforeThrow(hookFn)
+    expect(beforeThrow(false)).toBe(hookFn)
+    expect(beforeThrow(0)).toBe(false)
+    expect(beforeThrow(false)).toBe(0)
     expect(() => target(undefined, 1, funcArg, 2, funcArg, 3)).toThrow(AssertionError)
     expect(restOfArgs).toEqual([2, funcArg, 3])
   })
@@ -121,7 +134,7 @@ const runTests = (target, prefix, assert = undefined) => {
   })
 
   it(prefix + 'failing callback', () => {
-    hook(failFn)
+    beforeThrow(failFn)
     const e = getThrown(() => target(undefined, 'E %d %d', 1, 2))
     expect(e.message).toBe('Unexpected error from callback')
     expect(e.originalMessage).toBe('E 1 2')
@@ -134,7 +147,7 @@ const runTests = (target, prefix, assert = undefined) => {
       was = true
       return args.join('-')
     }
-    hook((err, args) => args.slice(1))                //  eslint-disable-line
+    beforeThrow((err, args) => args.slice(1))                //  eslint-disable-line
     const e = getThrown(() => target(0, fn, 1, 2))
     expect(e.message).toBe('Unexpected error from re-formatting')
     expect(e.originalMessage).toBe('1-2')

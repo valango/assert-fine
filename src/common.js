@@ -3,7 +3,7 @@
 
 const failWithType = require('./type_error')
 
-const toSkip = 'fail hook length name ok prototype strict'.split(' ')
+const toSkip = 'beforeThrow fail ifError length name ok prototype strict'.split(' ')
 
 module.exports = (native, format) => {
   let AssertionError, callback
@@ -68,6 +68,20 @@ module.exports = (native, format) => {
     innerThrow(exception, args)
   }
 
+  function ifError (actual, ...args) {
+    if (!(actual === undefined || actual === null)) {
+      let message = 'ifError got unwanted exception: ' +
+        ((actual && typeof actual === 'object' && typeof actual.message === 'string')
+          ? actual.message
+          : format('%o', actual))
+
+      if (args.length) message += compose(args)
+      innerThrow(new AssertionError({
+        actual, expected: null, operator: 'ifError', message, stackStartFn: ifError
+      }), args)
+    }
+  }
+
   const innerOk = (stackStartFn, args) => {
     if (!args.length) {
       innerOk(stackStartFn, [undefined, 'No value argument passed to `assert.ok()`'])
@@ -93,12 +107,12 @@ module.exports = (native, format) => {
    * @returns {function(*)|undefined} previous callback.
    * @throws {AssertionError} when non-falsy non-function argument is provided.
    */
-  function hook (cb) {
+  function beforeThrow (cb) {
     const old = callback
 
     if (arguments.length) {
       if (cb && typeof cb !== 'function') {
-        failWithType('hook callback must be of type function. Received ' + cb)
+        failWithType('beforeThrow callback must be of type function. Received ' + cb)
       }
       callback = cb
     }
@@ -112,7 +126,7 @@ module.exports = (native, format) => {
         dst[key] = src[key]
       }
     }
-    return Object.assign(dst, { fail, hook, ok, use })
+    return Object.assign(dst, { beforeThrow, fail, ifError, ok, use })
   }
 
   /**
