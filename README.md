@@ -10,8 +10,8 @@ _**interactive debugging**_, _before_ _`AssertionError`_ is thrown.<br />
 The [`beforeThrow()`](#function-beforethrowcallback) hook makes it easy.
 1. Including dynamic data to assertion messages comes at cost of additional code and
 performance penalty.<br />
-The overridden [`ok()`](#function-ok-value-args-) and
-[`fail()`](#function-fail-failure-args-) functions feature _**lazy formatting**_
+The overridden [`ok()`](#function-ok-value-args-), [`fail()`](#function-fail-failure-args-)
+and [`ifError()`](#function-iferror-value-args-) functions feature _**lazy formatting**_
 in a backwards-compatible manner.
 1. Front-end assertion is supported too, with minimalistic API of `(AssertionError, fail, ifError, ok)`
 by default. So you can use _**same code**_ in both back- and front-end (via a bundler).
@@ -32,14 +32,14 @@ feature request [#5312](https://github.com/nodejs/node/issues/5312)_.
 ```js
 const assert = require('assert-fine')
 
-assert.beforeThrow((error, args) => {   //  This call is optional.
-  doSomething()                         //  The breakpoint place.
+assert.beforeThrow(() => {  //  This call is optional.
+  return false              //  The breakpoint place.
 })
 
 //  Somewhere in your code
 assert(value === expected, 'assert(%o)', value, someFunction, ...argsForFunction)
 
-assert.equal(value, expected)           //  Is not affected by `assert-fine`.
+assert.equal(value, expected, 'Bang!')  //  Not affected by `assert-fine`.
 ```
 In the example above, the someFunction will be called, and the message is formatted only
 when the assertion fails.
@@ -50,36 +50,38 @@ when the assertion fails.
 Default export equals the `ok()` function.
 
 ### function `beforeThrow([callback])`
-If argument is supplied, sets or clears the global callback. Otherwise, just returns<br/>
+If argument is supplied, sets or clears the global callback. The callback function
+should just serve a code line for debugger breakpoint and return a falsy value.<br/>
 **Returns** `any` the global callback previous value.<br/>
 **Throws** `TypeError` if supplied argument is not function nor falsy.
 `callback: any `- should be a falsy value or function, if supplied.
 
 ### function `fail( [failure], ...args )`
 Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_fail_message),
-featuring the lazy formatting and invoking the callback set via `beforeThrow()`. Arguments:<br/>
+featuring the lazy formatting and invoking the callback set via `beforeThrow()`.
+
+Arguments:<br/>
 `failure: Error | function `- if a function supplied, it is treated as Error constructor,
 and error instance is created with `message` property composed of args;
 if _`Error`_ instance is supplied, the string composed of args is appended to its `message`.<br/>
-`...args: any ` - optional arguments. If the first one is a string, it will be supplied to `util.format`
-or to its front-end substitute. If any of the arguments is a function, it will be called
+`args: any` - optional arguments. If the first one is a string, it will be supplied to `util.format`
+or to its front-end substitute. If any of the _`args`_ is a function, it will be called
 with the rest opf arguments supplying its return value to `format()`.
 
 ### function `ifError( value, ...args )`
 Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_iferror_value),
 featuring the lazy formatting and invoking the callback set via `beforeThrow()`. Arguments:<br/>
 `value: any`<br/>
-`...args: any `- optional arguments, working exactly as those of [`fail()`](#function-fail-failure-args-).
+`args: any `- optional arguments, working exactly as those of [`fail()`](#function-fail-failure-args-).
 
 ### function `ok( value, ...args )`
 Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_ok_message),
 featuring the lazy formatting and invoking the callback set via `beforeThrow()`. Arguments:<br/>
 `value: any`<br/>
-`...args: any `- optional arguments, working exactly as those of [`fail()`](#function-fail-failure-args-).
+`args: any`- optional arguments, working exactly as those of [`fail()`](#function-fail-failure-args-).
 
 ### function `use( engine )`
-Wraps the assertion engine, putting it into use
-
+Wraps the _assertion engine_, putting it into use.
 This function is called internally upon
 loading the package, with Node.js built-in _`assert`_ package or with its own substitute,
 when loaded via a bundler ([browserify](https://browserify.org/), [webpack](https://webpack.js.org/),
@@ -87,8 +89,8 @@ when loaded via a bundler ([browserify](https://browserify.org/), [webpack](http
 You might need this function when using something like
 [assert](https://github.com/browserify/commonjs-assert) package for front-end.
 
-This function does not modify the supplied engine in any way, and<br/>
-it does not alter the exported ( _`beforeThrow, fail, ok, use`_ ) values either.
+This function _**does not** modify_ the supplied _`engine`_ instance in any way, and<br/>
+it does not alter the exported ( _`beforeThrow, fail, ifError, ok, use`_ ) values either.
 
 All other properties of the engine argument will be assigned to the already exported API.
 
@@ -101,9 +103,37 @@ package object instance. For subtle details, see the [source code](src/common.js
 Any properties of the assertion engine, not shadowed by the API described above,
 will be directly assigned to package object instance.
 
+## Advanced topics
+### Changing package settings
+Calls to _`beforeThrow()`_ or _`use()`_ anywhere in your code affect the state `assert-fine` instance
+kept in [_`require.cache`_](http://nodejs.org/api/modules.html#modules_require_cache) or alike.
+It is preferable to make these calls from the application boot module, before executing
+any other code.
+
+### Switching the assertion engine
+If you need something special in place of the default engine, do something like this:
+```js
+import engine from 'assert'         //  A npm package for front-end applications.
+import assert from 'assert-fine'
+
+assert.use(engine)  //  Should be executed _before_ any possible assertion call.
+```
+Technically, it is possible to switch engines at any moment.
+
+### The global callback function
+This function, if set  via [`beforeThrow()`](#function-beforethrowcallback), should be kept
+as simple as possible. It's typical use is just to provide a code line for debugger breakpoint.
+
+If the callback itself throws an error, it will be stored in assertion instance's _`extra`_
+property and its _`message`_ will be appended to the assertion message.
+
+The callback receives two arguments:<br/>
+`error: Error` - the instance that will be thrown;<br/>
+`args: any[]` - the _`args`_ from the call of `fail()`, `ifError()` or `ok()`.
+
 ## Acknowledgements
-[assert](https://github.com/browserify/commonjs-assert) NPM package - I borrowed quite some
+[assert](https://github.com/browserify/commonjs-assert) npm package - I borrowed quite some
 pieces of code from there - thanks a lot, folks!
 
-[debug](https://github.com/visionmedia/debug) NPM package - inspecting its source code
+[debug](https://github.com/visionmedia/debug) npm package - inspecting its source code
 helped me to fix the disastrous bug (issue #1) of this package - thanks again!

@@ -13,14 +13,15 @@ const getThrown = fn => {
 
 //  Actual tests.
 const runTests = (target, prefix, assert = undefined) => {
-  const doStrict = prefix.indexOf('strict') >= 0
+  const doStrict = prefix.indexOf('strict') >= 0, intentional = new Error('Int')
   let providedArgs, restOfArgs, expectedObject
 
   if (assert) {
     target.use(assert)
   }
 
-  const { beforeThrow, AssertionError, fail, ifError, ok, use } = target
+  const { beforeThrow, use } = target
+  const { AssertionError, fail, ifError, ok } = doStrict ? target.strict : target
 
   const checkFail = (e, message, type) => {
     expect(e).toBeInstanceOf(type || AssertionError)
@@ -29,7 +30,7 @@ const runTests = (target, prefix, assert = undefined) => {
   }
 
   const failFn = () => {
-    throw new Error('Intentional')
+    throw intentional
   }
 
   const funcArg = (...args) => ('F(' + (restOfArgs = args.slice()).join(',') + ')')
@@ -51,10 +52,9 @@ const runTests = (target, prefix, assert = undefined) => {
     expect(typeof use).toBe('function')
     expect(typeof AssertionError).toBe('function')
     if (doStrict) {
-      if (!assert) expect(target).toBe(ok.strict.strict)
-      expect(fail).toBe(ok.fail)
-      expect(beforeThrow).toBe(ok.beforeThrow)
-      expect(use).toBe(ok.use)
+      expect(fail).toBe(target.fail)
+      expect(ifError).toBe(target.ifError)
+      expect(ok).toBe(target.ok)
     } else {
       if (process.browser && !assert) expect(target).not.toHaveProperty('strict')
       expect(target).toBe(ok)
@@ -99,14 +99,6 @@ const runTests = (target, prefix, assert = undefined) => {
     checkFail(getThrown(() => (fail())), 'Failed')
   })
 
-  it(prefix + 'beforeThrow amending the message', () => {
-    beforeThrow((e, args) => args.map(v => v > 0 ? -v : v))
-    const e = getThrown(() => fail('F %o %o %o!', -2, '', 3))
-    expect(e).toBeInstanceOf(AssertionError)
-    expect(e.message).toBe('F -2 \'\' -3!')
-    expect(e.originalMessage).toBe('F -2 \'\' 3!')
-  })
-
   it(prefix + 'ifError()', () => {
     expect(ifError()).toBe(undefined)
     expect(ifError(null)).toBe(undefined)
@@ -115,7 +107,7 @@ const runTests = (target, prefix, assert = undefined) => {
     checkFail(getThrown(() => (ifError(''))), "ifError got unwanted exception: ''")
     checkFail(getThrown(() => (ifError('', '%o', ''))), "ifError got unwanted exception: ''''")
     const e = expectedObject.actual = new Error('x')
-    checkFail(getThrown(() => (ifError(e, '+'))), "ifError got unwanted exception: x+")
+    checkFail(getThrown(() => (ifError(e, '+'))), 'ifError got unwanted exception: x+')
   })
 
   it(prefix + 'resetting beforeThrow', () => {
@@ -129,28 +121,22 @@ const runTests = (target, prefix, assert = undefined) => {
 
   it(prefix + 'failing funcArg', () => {
     const e = getThrown(() => target('', 1, failFn, 2))
-    expect(e.message).toBe('Intentional')
+    expect(e.message).toBe('Int')
     expect(e).toBeInstanceOf(Error)
+    expect(e).not.toBeInstanceOf(AssertionError)
   })
 
   it(prefix + 'failing callback', () => {
     beforeThrow(failFn)
     const e = getThrown(() => target(undefined, 'E %d %d', 1, 2))
-    expect(e.message).toBe('Unexpected error from callback')
-    expect(e.originalMessage).toBe('E 1 2')
-  })
-
-  it(prefix + 'failing re-formatting', () => {
-    let was = false
-    const fn = (...args) => {
-      if (was) throw new Error('Failed')
-      was = true
-      return args.join('-')
+    expectedObject = {
+      actual: '',
+      code: 'ERR_ASSERTION',
+      expected: null,
+      extra: intentional,
+      operator: 'ifError'
     }
-    beforeThrow((err, args) => args.slice(1))                //  eslint-disable-line
-    const e = getThrown(() => target(0, fn, 1, 2))
-    expect(e.message).toBe('Unexpected error from re-formatting')
-    expect(e.originalMessage).toBe('1-2')
+    expect(e.message).toBe('E 1 2')
   })
 
   it(prefix + 'use() should fail w bad API', () => {

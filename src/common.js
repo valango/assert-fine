@@ -31,18 +31,12 @@ module.exports = (native, format) => {
   }
 
   const innerThrow = (exception, args) => {
-    let result = compose
-
-    try {
-      if (callback) {
-        if ((result = callback(exception, args)) instanceof Array && result.length) {
-          exception.originalMessage = exception.message
-          exception.message = compose(result)
-        }
+    if (callback) {
+      try {
+        callback(exception, args)
+      } catch (err) {
+        exception.extra = err
       }
-    } catch (err) {
-      exception.originalMessage = exception.message
-      exception.message = 'Unexpected error from ' + (result === compose ? 'callback' : 're-formatting')
     }
     throw exception
   }
@@ -126,7 +120,7 @@ module.exports = (native, format) => {
         dst[key] = src[key]
       }
     }
-    return Object.assign(dst, { beforeThrow, fail, ifError, ok, use })
+    Object.assign(dst, { fail, ifError, ok })
   }
 
   /**
@@ -160,5 +154,5 @@ module.exports = (native, format) => {
 
   use(native)
 
-  return ok
+  return Object.assign(ok, { beforeThrow, use })
 }
