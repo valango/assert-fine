@@ -1,6 +1,6 @@
 {
   "name": "assert-fine",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "description": "A lightweight wrapper making assertion testing much easier.",
   "browser": "src/browser.js",
   "main": "src/index.js",
