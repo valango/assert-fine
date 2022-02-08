@@ -1,4 +1,4 @@
-//  fallback.js - a front-end fallback for assert.ok API.
+//  src/assertion_error.js - a front-end fallback for assert.ok API.
 'use strict'
 
 /**

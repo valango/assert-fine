@@ -1,4 +1,4 @@
-//  /browser.js
+//  src/browser.js
 'use strict'
 
 // process.stdout.write('LD: assert-fine/browser\n')

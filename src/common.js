@@ -6,7 +6,7 @@ const failWithType = require('./type_error')
 const toSkip = 'beforeThrow fail ifError length name ok prototype strict'.split(' ')
 
 module.exports = (native, format) => {
-  let AssertionError, callback
+  let AssertionError, callback = false
 
   const compose = parts => {
     let message, i = -1
@@ -80,14 +80,16 @@ module.exports = (native, format) => {
   const innerOk = (stackStartFn, args) => {
     if (!args.length) {
       innerOk(stackStartFn, [undefined, 'No value argument passed to `assert.ok()`'])
-    } else if (!args[0]) {
-      innerThrow(new AssertionError({
-        actual: args[0],
-        expected: true,
-        message: compose(args.slice(1)),
-        operator: '==',
-        stackStartFn
-      }), args)
+    } else if (!args[0]) {      //  Todo: remove extra condition.
+      innerThrow(args[0] instanceof Error
+        ? args[0]
+        : new AssertionError({
+          actual: args[0],
+          expected: true,
+          message: compose(args.slice(1)),
+          operator: '==',
+          stackStartFn
+        }), args)
     }
   }
 
@@ -107,9 +109,9 @@ module.exports = (native, format) => {
 
     if (arguments.length) {
       if (cb && typeof cb !== 'function') {
-        failWithType('beforeThrow callback must be of type function. Received ' + cb)
+        failWithType('beforeThrow callback must be function or false. Received ' + cb)
       }
-      callback = cb
+      callback = cb || undefined
     }
 
     return old

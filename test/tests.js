@@ -117,8 +117,8 @@ const runTests = (target, prefix, assert = undefined) => {
   it(prefix + 'resetting beforeThrow', () => {
     beforeThrow(hookFn)
     expect(beforeThrow(false)).toBe(hookFn)
-    expect(beforeThrow(0)).toBe(false)
-    expect(beforeThrow(false)).toBe(0)
+    expect(beforeThrow(0)).toBe(undefined)
+    expect(beforeThrow(false)).toBe(undefined)
     expect(() => ok(undefined, 1, funcArg, 2, funcArg, 3)).toThrow(AssertionError)
     expect(restOfArgs).toEqual([2, funcArg, 3])
   })

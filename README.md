@@ -49,12 +49,13 @@ when the assertion fails.
 ### Default export
 Default export equals the `ok()` function.
 
-### function `beforeThrow([callback])`
-If argument is supplied, sets or clears the global callback. The callback function
-should just serve a code line for debugger breakpoint and return a falsy value.<br/>
-**Returns** `any` the global callback previous value.<br/>
+### function `beforeThrow([callback: function|false])`
+Sets, resets or just queries the global callback function.
+
+The callback will be called right before the assertion error is thrown.
+It's main purpose is to provide debugger breakpoint.
+**Returns** `function | undefined` the global callback value so far.<br/>
 **Throws** `TypeError` if supplied argument is not function nor falsy.
-`callback: any `- should be a falsy value or function, if supplied.
 
 ### function `fail( [failure], ...args )`
 Replaces its [Node.js counterpart](http://nodejs.org/api/assert.html#assert_assert_fail_message),
