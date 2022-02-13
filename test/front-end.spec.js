@@ -1,10 +1,6 @@
 'use strict'
 /* eslint-env jest */
 
-/**
- * @jest-environment jsdom
- */
-
 const tests = require('./tests')
 const saved = process.browser
 

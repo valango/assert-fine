@@ -78,6 +78,10 @@ const runTests = (target, prefix, assert = undefined) => {
     expect(() => ok()).toThrowError('No value argument passed')
   })
 
+  it(prefix + 'should implement AssertionError', () => {
+    expect(() => new AssertionError('some')).toThrow('type object')
+  })
+
   it(prefix + 'failing assertion w simple message', () => {
     beforeThrow(hookFn)
     const e = getThrown(() => ok(0, 1, 2))
@@ -85,6 +89,7 @@ const runTests = (target, prefix, assert = undefined) => {
     expect(e.stack).not.toMatch(/assertion:/)
     expect(e.message).toBe('1 2')
     expect(providedArgs).toEqual([0, 1, 2])
+    expect(e + '').toBe('AssertionError [ERR_ASSERTION]: 1 2')
   })
 
   it(prefix + 'failing assertion w composed message', () => {

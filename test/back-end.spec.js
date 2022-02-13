@@ -1,10 +1,6 @@
 'use strict'
 /* eslint-env jest */
 
-/**
- * @jest-environment node
- */
-
 const tests = require('./tests')
 
 describe('back-end', () => {
